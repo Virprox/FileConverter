@@ -11,13 +11,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Verify files
+    - name: Verify files (Windows compatible)
       run: |
-        ls
-        if [ ! -f "ui_converter.py" ]; then
-          echo "ERROR: ui_converter.py not found!"
+        dir  # Lista plików
+        if not exist "ui_converter.py" (
+          echo ERROR: ui_converter.py not found!
           exit 1
-        fi
+        )
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -29,27 +29,21 @@ jobs:
         python -m pip install --upgrade pip
         pip install PyQt5 pyyaml xmltodict pyinstaller
 
-    - name: Test imports
+    - name: Build EXE
       run: |
-        python -c "from PyQt5.QtWidgets import QApplication; import yaml; import xmltodict; print('All imports OK')"
+        pyinstaller --onefile --noconsole --name FileConverter.exe ui_converter.py
 
-    - name: Build EXE (with debug)
+    - name: Verify EXE (Windows style)
       run: |
-        pyinstaller --onefile --noconsole --log-level DEBUG --name FileConverter.exe ui_converter.py 2>&1 | tee build.log
-        type build.log
-
-    - name: Verify EXE
-      run: |
-        if [ -f "dist/FileConverter.exe" ]; then
-          echo "EXE generated successfully"
-          ls -lh dist/
-        else
-          echo "ERROR: EXE not created"
+        if exist "dist\FileConverter.exe" (
+          echo EXE generated successfully
+          dir dist\
+        ) else (
+          echo ERROR: EXE not created
           exit 1
-        fi
+        )
 
-    - name: Upload EXE
-      uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v4
       with:
         name: FileConverter
-        path: dist/FileConverter.exe
+        path: dist\FileConverter.exe
