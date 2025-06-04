@@ -11,13 +11,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Verify files (Windows compatible)
+    - name: Verify files (PowerShell)
+      shell: pwsh
       run: |
-        dir  # Lista plików
-        if not exist "ui_converter.py" (
-          echo ERROR: ui_converter.py not found!
+        Get-ChildItem
+        if (-not (Test-Path "ui_converter.py")) {
+          Write-Error "ERROR: ui_converter.py not found!"
           exit 1
-        )
+        }
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -33,15 +34,16 @@ jobs:
       run: |
         pyinstaller --onefile --noconsole --name FileConverter.exe ui_converter.py
 
-    - name: Verify EXE (Windows style)
+    - name: Verify EXE (PowerShell)
+      shell: pwsh
       run: |
-        if exist "dist\FileConverter.exe" (
-          echo EXE generated successfully
-          dir dist\
-        ) else (
-          echo ERROR: EXE not created
+        if (Test-Path "dist\FileConverter.exe") {
+          Write-Output "EXE generated successfully"
+          Get-ChildItem dist
+        } else {
+          Write-Error "ERROR: EXE not created"
           exit 1
-        )
+        }
 
     - uses: actions/upload-artifact@v4
       with:
