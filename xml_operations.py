@@ -10,6 +10,7 @@ def load_xml(file_path):
         print("BŁĄD XML: {e}")
         return None
 
+<<<<<<< HEAD
 def save_xml(data, file_path):
     try:
         with open(file_path, 'w', encoding='utf-8') as file:
@@ -30,3 +31,10 @@ if __name__ == "__main__":
         # Test zapisywania
         sciezka_wyjsciowa = input("Podaj ścieżkę do nowego pliku XML (do zapisu): ")
         save_xml(dane, sciezka_wyjsciowa)
+=======
+if __name__ == "__main__":
+    sciezka = input("Podaj ścieżkę do pliku XML: ")
+    dane = load_xml(sciezka)
+    if dane:
+        print("Zawartość pliku:", dane)
+>>>>>>> Task6
