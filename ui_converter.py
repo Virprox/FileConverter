@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileDialog,
 from PyQt5.QtCore import QThread, pyqtSignal
 
 class FileWorker(QThread):
-    """Klasa wątku do obsługi operacji na plikach."""
     finished = pyqtSignal(bool, str)  # (sukces, komunikat)
 
     def __init__(self, operation, *args):
@@ -31,7 +30,6 @@ class FileWorker(QThread):
             self.finished.emit(False, error_msg)
 
     def _read_file(self, file_path):
-        """Wczytuje dane z pliku (JSON/YAML/XML)."""
         try:
             extension = Path(file_path).suffix.lower()
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -47,7 +45,6 @@ class FileWorker(QThread):
             raise Exception("Błąd wczytywania: {str(e)}")
 
     def _save_file(self, data, file_path, target_format):
-        """Zapisuje dane w wybranym formacie."""
         try:
             with open(file_path, 'w', encoding='utf-8') as file:
                 if target_format == 'json':
@@ -61,7 +58,6 @@ class FileWorker(QThread):
             raise Exception("Błąd zapisu: {str(e)}")
 
 class FileConverterUI(QMainWindow):
-    """Główne okno aplikacji."""
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Konwerter plików v1.4")
@@ -95,8 +91,7 @@ class FileConverterUI(QMainWindow):
         self.btn_convert.clicked.connect(self.convert_file)
 
     def load_file(self):
-        """Obsługa wyboru pliku."""
-        file_path, _ = QFileDialog.getOpenFileName(
+        file_path, _ = QFileDialoggit push origin Task9.getOpenFileName(
             self, "Wybierz plik", "",
             "Wszystkie pliki (*.*);;JSON (*.json);;YAML (*.yml *.yaml);;XML (*.xml)"
         )
@@ -108,7 +103,6 @@ class FileConverterUI(QMainWindow):
             self.worker.start()
 
     def convert_file(self):
-        """Obsługa konwersji pliku z pełną kontrolą nazwy."""
         if not self.input_file or not self.file_data:
             QMessageBox.warning(self, "Błąd", "Najpierw wybierz plik!")
             return
@@ -147,18 +141,15 @@ class FileConverterUI(QMainWindow):
             self.worker.start()
 
     def _on_load_finished(self, success, message):
-        """Obsługa zakończenia wczytywania."""
         if success:
             self.file_data = self.worker._read_file(self.worker.args[0])
             self.input_file = self.worker.args[0]
         self._handle_operation_result(success, message)
 
     def _on_convert_finished(self, success, message):
-        """Obsługa zakończenia konwersji."""
         self._handle_operation_result(success, message)
 
     def _handle_operation_result(self, success, message):
-        """Wspólna obsługa wyników operacji."""
         self._set_ui_enabled(True)
         safe_message = message.replace("{", "{{").replace("}", "}}")
         self.status_label.setText(safe_message)
@@ -167,7 +158,6 @@ class FileConverterUI(QMainWindow):
         self.worker = None
 
     def _set_ui_enabled(self, enabled):
-        """Włącza/wyłącza elementy UI."""
         self.btn_load.setEnabled(enabled)
         self.btn_convert.setEnabled(enabled)
         self.combo_format.setEnabled(enabled)
