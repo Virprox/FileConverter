@@ -1,0 +1,8 @@
+# Pliki Pythona
+__pycache__/
+*.pyc
+
+# Pliki PyInstallera
+dist/
+build/
+*.spec
