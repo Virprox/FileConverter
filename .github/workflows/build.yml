@@ -1,4 +1,4 @@
-name: Build FileConverter EXE
+name: Build and Upload
 
 on:
   push:
@@ -10,11 +10,10 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v4
+    - name: Set up Python
+      uses: actions/setup-python@v3
       with:
         python-version: '3.10'
 
@@ -23,12 +22,26 @@ jobs:
         python -m pip install --upgrade pip
         pip install pyinstaller PyQt5 pyyaml xmltodict
 
-    - name: Run PyInstaller
+    - name: Debug - list files
+      run: |
+        ls -R
+
+    - name: Build EXE
       run: |
         pyinstaller --onefile --noconsole --name FileConverter.exe ui_converter.py
+        ls dist/  # Sprawdź czy plik został stworzony
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
+    - name: Verify EXE
+      run: |
+        if [ -f "dist/FileConverter.exe" ]; then
+          echo "EXE file exists"
+        else
+          echo "ERROR: EXE file not found!"
+          exit 1
+        fi
+
+    - name: Upload EXE
+      uses: actions/upload-artifact@v3
       with:
         name: FileConverter
         path: dist/FileConverter.exe
