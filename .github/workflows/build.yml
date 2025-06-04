@@ -28,7 +28,7 @@ jobs:
         pyinstaller --onefile --noconsole --name FileConverter.exe ui_converter.py
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: FileConverter
         path: dist/FileConverter.exe
