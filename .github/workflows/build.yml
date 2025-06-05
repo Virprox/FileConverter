@@ -1,42 +1,76 @@
-name: Build and Upload
+name: Build and Deploy FileConverter
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Verify Python file
+    - name: Verify Python file structure
       shell: pwsh
       run: |
-        # Sprawdź czy plik ma poprawne końcówki linii (LF zamiast CRLF)
-        Get-Content ui_converter.py -Raw | Select-String "QFileDialoggit"
-        if ($?) {
-          Write-Error "Znaleziono błąd składniowy w pliku!"
-          exit 1
+        # Sprawdź istnienie kluczowych plików
+        $requiredFiles = @("ui_converter.py", "installResources.ps1")
+        foreach ($file in $requiredFiles) {
+          if (-not (Test-Path $file)) {
+            Write-Error "Brak wymaganego pliku: $file"
+            exit 1
+          }
         }
+        
+        # Sprawdź podstawową składnię Pythona
+        python -m py_compile ui_converter.py
 
-    - name: Set up Python
+    - name: Set up Python 3.10
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
+        architecture: 'x64'
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install PyQt5 pyyaml xmltodict pyinstaller
+        # Instalacja z pliku PowerShell
+        ./installResources.ps1
+        # Dodatkowe sprawdzenie
+        pip list | findstr "PyQt5 pyyaml xmltodict pyinstaller"
 
-    - name: Build EXE (with validation)
+    - name: Build EXE with PyInstaller
       run: |
-        python -c "from PyQt5.QtWidgets import QFileDialog; print('QFileDialog import OK')"
-        pyinstaller --onefile --noconsole --name FileConverter.exe ui_converter.py
+        pyinstaller `
+          --onefile `
+          --noconsole `
+          --name FileConverter `
+          --distpath dist `
+          --workpath build `
+          --specpath . `
+          ui_converter.py
+        
+        # Weryfikacja pliku wyjściowego
+        if (-not (Test-Path "dist\FileConverter.exe")) {
+          Write-Error "Build failed - EXE file not generated!"
+          Get-ChildItem -Recurse
+          exit 1
+        }
 
-    - uses: actions/upload-artifact@v4
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
       with:
-        name: FileConverter
-        path: dist\FileConverter.exe
+        name: FileConverter-Windows
+        path: |
+          dist/FileConverter.exe
+          installResources.ps1
+        retention-days: 7
+
+    - name: Show build info
+      run: |
+        Write-Output "=== Build summary ==="
+        Write-Output "EXE size: $((Get-Item 'dist\FileConverter.exe').Length/1MB) MB"
+        Write-Output "Python version: $(python --version)"
+        Write-Output "PyInstaller version: $(pyinstaller --version)"
