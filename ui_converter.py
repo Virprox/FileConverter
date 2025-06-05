@@ -91,7 +91,7 @@ class FileConverterUI(QMainWindow):
         self.btn_convert.clicked.connect(self.convert_file)
 
     def load_file(self):
-        file_path, _ = QFileDialoggit push origin Task9.getOpenFileName(
+        file_path, _ = QFileDialog.getOpenFileName(
             self, "Wybierz plik", "",
             "Wszystkie pliki (*.*);;JSON (*.json);;YAML (*.yml *.yaml);;XML (*.xml)"
         )
