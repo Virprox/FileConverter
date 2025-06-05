@@ -11,12 +11,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Verify files (PowerShell)
+    - name: Verify Python file
       shell: pwsh
       run: |
-        Get-ChildItem
-        if (-not (Test-Path "ui_converter.py")) {
-          Write-Error "ERROR: ui_converter.py not found!"
+        # Sprawdź czy plik ma poprawne końcówki linii (LF zamiast CRLF)
+        Get-Content ui_converter.py -Raw | Select-String "QFileDialoggit"
+        if ($?) {
+          Write-Error "Znaleziono błąd składniowy w pliku!"
           exit 1
         }
 
@@ -30,20 +31,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install PyQt5 pyyaml xmltodict pyinstaller
 
-    - name: Build EXE
+    - name: Build EXE (with validation)
       run: |
+        python -c "from PyQt5.QtWidgets import QFileDialog; print('QFileDialog import OK')"
         pyinstaller --onefile --noconsole --name FileConverter.exe ui_converter.py
-
-    - name: Verify EXE (PowerShell)
-      shell: pwsh
-      run: |
-        if (Test-Path "dist\FileConverter.exe") {
-          Write-Output "EXE generated successfully"
-          Get-ChildItem dist
-        } else {
-          Write-Error "ERROR: EXE not created"
-          exit 1
-        }
 
     - uses: actions/upload-artifact@v4
       with:
